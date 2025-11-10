@@ -1,3 +1,3 @@
-# Property Chain Dashboard
+# Reactjs Admin Dashboard Starter
 
-This system is a multi-level referral program that rewards users with commissions for transactions made by their direct referrals and the referrals of those individuals.
+A modern React.js starter packed with ShadCN UI, InterUI components, TailwindCSS, and an optimized table system. Includes custom alerts powered by Sonner for a smooth developer experience.
