@@ -7,33 +7,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
-
-export type AlertType = 'success' | 'error' | 'warning' | 'info' | 'confirm'
-
-export interface AlertAction {
-  label: string
-  onClick: () => void | Promise<void>
-  variant?: 'default' | 'danger' | 'primary'
-  isLoading?: boolean
-}
-
-export interface AlertDialogProps {
-  type: AlertType
-  title: string
-  description?: string
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  confirmAction?: AlertAction
-  cancelAction?: AlertAction
-  children?: React.ReactNode
-  icon?: React.ReactNode
-  iconSrc?: string
-  iconAlt?: string
-}
+import type { AlertType } from '@/context/alert-context'
+import { AlertContext } from '@/context/alert-context'
+import { useContext, useState } from 'react'
 
 const defaultIcons: Record<AlertType, { src: string; alt: string }> = {
   success: { src: '/icons/success.svg', alt: 'Success' },
@@ -69,61 +47,60 @@ function AlertIcon({
   return <img src={finalSrc} alt={finalAlt} className="mx-auto h-24 w-24 shrink-0" />
 }
 
-export function Alert({
-  type,
-  title,
-  description,
-  isOpen,
-  onOpenChange,
-  confirmAction,
-  cancelAction,
-  children,
-  icon,
-  iconSrc,
-  iconAlt,
-}: AlertDialogProps) {
-  // State management - O(1)
-  const [internalIsOpen, setInternalIsOpen] = useState(false)
+export function AlertDisplay() {
+  const context = useContext(AlertContext)
   const [isLoading, setIsLoading] = useState(false)
 
-  const open = isOpen ?? internalIsOpen
-  const setOpen = onOpenChange ?? setInternalIsOpen
+  if (!context) {
+    console.warn('AlertDisplay must be used within an AlertProvider')
+    return null
+  }
 
-  // Action handlers - O(1)
-  const handleAction = async (action?: AlertAction) => {
+  const { state, hideAlert } = context
+  const { isOpen, config } = state
+
+  if (!config) {
+    return null
+  }
+
+  const handleAction = async (
+    action: { label: string; onClick: () => void | Promise<void> } | undefined,
+  ) => {
     if (!action) {
-      setOpen(false)
+      hideAlert()
       return
     }
 
     setIsLoading(true)
     try {
       await action.onClick()
-      setOpen(false)
     } finally {
       setIsLoading(false)
+      hideAlert()
     }
   }
 
-  const handleConfirm = () => handleAction(confirmAction)
-  const handleCancel = () => handleAction(cancelAction)
+  const handleConfirm = () => handleAction(config.confirmAction)
+  const handleCancel = () => handleAction(config.cancelAction)
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      {children && <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>}
-
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && hideAlert()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex flex-col gap-3">
-            {' '}
-            <AlertIcon type={type} iconSrc={iconSrc} iconAlt={iconAlt} customIcon={icon} />
+            <AlertIcon
+              type={config.type}
+              iconSrc={config.iconSrc}
+              iconAlt={config.iconAlt}
+              customIcon={config.icon}
+            />
             <div className="flex-1">
               <AlertDialogTitle className="text-center text-2xl leading-8 font-semibold">
-                {title}
+                {config.title}
               </AlertDialogTitle>
-              {description && (
+              {config.description && (
                 <AlertDialogDescription className="mt-2 text-center text-base leading-6">
-                  {description}
+                  {config.description}
                 </AlertDialogDescription>
               )}
             </div>
@@ -131,33 +108,33 @@ export function Alert({
         </AlertDialogHeader>
 
         <AlertDialogFooter className="mt-8">
-          {cancelAction ? (
+          {config.cancelAction ? (
             <Button
-              className={'h-10 w-full'}
+              className="h-10 w-full"
               intent="outline"
               onClick={handleCancel}
               isDisabled={isLoading}
             >
-              {cancelAction.label}
+              {config.cancelAction.label}
             </Button>
           ) : (
             <AlertDialogCancel>Close</AlertDialogCancel>
           )}
 
-          {confirmAction && (
+          {config.confirmAction && (
             <Button
               intent={
-                confirmAction.variant === 'danger'
+                config.confirmAction.variant === 'danger'
                   ? 'danger'
-                  : confirmAction.variant === 'default'
+                  : config.confirmAction.variant === 'default'
                     ? 'outline'
                     : 'primary'
               }
               onClick={handleConfirm}
-              isDisabled={isLoading || confirmAction.isLoading}
-              className={'h-10 w-full'}
+              isDisabled={isLoading || config.confirmAction.isLoading}
+              className="h-10 w-full"
             >
-              {confirmAction.label}
+              {config.confirmAction.label}
             </Button>
           )}
         </AlertDialogFooter>

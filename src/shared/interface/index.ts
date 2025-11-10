@@ -3,6 +3,7 @@ export interface ISidebarItem {
   title: string
   href: string
   icon: any
+  solidIcon?: any
   badge?: string | number | null
   items?: ISidebarItem[]
 }

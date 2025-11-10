@@ -1,77 +1,98 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
-import logo from '/logo.svg'
-import { useState } from 'react'
-import type { IDropdownItemProps, ISidebarData, ISidebarGroup, ISidebarItem } from '../interface'
-import { HugeiconsIcon } from '@hugeicons/react'
-import {
-  Building02Icon,
-  DollarCircleIcon,
-  Home07Icon,
-  LogoutSquare01Icon,
-  Settings01Icon,
-  UserMultipleIcon,
-} from '@hugeicons-pro/core-stroke-rounded'
-import sidebar_bottom_card from '@/assets/images/sidebar-bottom-card.svg.svg'
 import call_center from '@/assets/images/call-center.svg'
+import sidebar_bottom_card from '@/assets/images/sidebar-bottom-card.svg.svg'
+import { cn } from '@/lib/utils'
+import {
+  UserGroupIcon as AgentsStroke,
+  DashboardSquare01Icon as DashboardStroke,
+  LogoutSquare01Icon,
+  File02Icon as ProjectStroke,
+  ChartUpIcon as RevenueIcon,
+  Analytics01Icon as SalesIcon,
+} from '@hugeicons-pro/core-stroke-rounded'
+
+import {
+  UserGroupIcon as AgentsSolid,
+  DashboardSquare01Icon as DashboardSolid,
+  File02Icon as ProjectSolid,
+  ChartUpIcon as RevenueSolid,
+  Analytics01Icon as SalesSolid,
+} from '@hugeicons-pro/core-solid-rounded'
+
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import type { IDropdownItemProps, ISidebarData, ISidebarGroup, ISidebarItem } from '../interface'
+import logo from '/logo.svg'
 
 import { Button } from '@/components/ui/button'
-import { useAlert } from '@/shared'
+import { useAlert } from '@/hooks/use-alert'
 
 const sidebarData: ISidebarData = [
   {
-    title: 'Dashboard',
-    href: '/',
-    icon: Home07Icon,
-  },
-  {
-    title: 'Projects',
-    href: '/projects',
-    icon: Building02Icon,
-  },
-  {
-    title: 'Investors',
-    href: '/investors',
-    icon: UserMultipleIcon,
-  },
-  {
-    title: 'Transactions',
-    href: '/transactions',
-    icon: DollarCircleIcon,
-  },
-  {
-    title: 'Settings',
-    href: '/settings',
-    icon: Settings01Icon,
+    title: 'Menu',
+    items: [
+      {
+        title: 'Dashboard',
+        href: '/',
+        icon: DashboardStroke,
+        solidIcon: DashboardSolid,
+      },
+      {
+        title: 'Projects',
+        href: '/projects',
+        icon: ProjectStroke,
+        solidIcon: ProjectSolid,
+      },
+      {
+        title: 'Sales',
+        href: '/sales',
+        icon: SalesIcon,
+        solidIcon: SalesSolid,
+      },
+      {
+        title: 'Revenue',
+        href: '/revenue',
+        icon: RevenueIcon,
+        solidIcon: RevenueSolid,
+      },
+      {
+        title: 'Agents',
+        href: '/agents',
+        icon: AgentsStroke,
+        solidIcon: AgentsSolid,
+      },
+    ],
   },
 ]
 
 function SidebarIcon({
   icon,
+  solidIcon,
   isActive,
   className,
 }: {
   icon: any
+  solidIcon: any
   isActive?: boolean
   className?: string
 }) {
   return (
     <HugeiconsIcon
-      icon={icon}
+      icon={isActive ? solidIcon : icon}
       size={20}
       color="currentColor"
-      strokeWidth={2}
-      className={cn('shrink-0', isActive ? 'text-white' : 'text-muted-fg', className)}
+      className={cn('shrink-0', isActive ? 'text-primary' : 'text-muted-fg', className)}
     />
   )
 }
 
 function DropdownItem({ item, onMobileClose }: IDropdownItemProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const pathname = useLocation().pathname
   const Icon = item.icon
 
@@ -90,12 +111,14 @@ function DropdownItem({ item, onMobileClose }: IDropdownItemProps) {
         <Link
           to={item.href}
           onClick={handleLinkClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
           className={cn(
-            'flex items-center gap-2 rounded-xl px-3 py-2',
-            isActive ? 'bg-primary text-white shadow-md' : 'text-muted-fg',
+            'flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-200',
+            isActive || isHovered ? 'text-primary bg-[#F5F9FC]' : 'text-muted-fg',
           )}
         >
-          <SidebarIcon icon={Icon} isActive={isActive} />
+          <SidebarIcon icon={Icon} solidIcon={item.solidIcon} isActive={isActive || isHovered} />
           <p className="leading-7 font-medium">{item.title}</p>
           {item.badge && (
             <p className="bg-primary text-primary-foreground ml-auto rounded-full px-2 py-1 text-xs">
@@ -103,8 +126,8 @@ function DropdownItem({ item, onMobileClose }: IDropdownItemProps) {
             </p>
           )}
         </Link>
-        {isActive && (
-          <div className="bg-primary absolute top-2 -left-[19px] h-7 w-1 rounded-tr-xl rounded-br-xl" />
+        {(isActive || isHovered) && (
+          <div className="bg-primary absolute top-2 -left-[19px] h-7 w-1 rounded-tr-xl rounded-br-xl transition-all duration-200" />
         )}
       </div>
     )
@@ -114,9 +137,14 @@ function DropdownItem({ item, onMobileClose }: IDropdownItemProps) {
     <div className="space-y-1">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="text-muted-fg hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200"
+        className={cn(
+          'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+          isOpen
+            ? 'text-primary bg-[#F5F9FC]'
+            : 'text-muted-fg hover:text-foreground hover:bg-[#F5F9FC]',
+        )}
       >
-        <SidebarIcon icon={Icon} />
+        <SidebarIcon isActive={isOpen} icon={Icon} solidIcon={item.solidIcon} />
         <span className="flex-1 text-left">{item.title}</span>
         {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
@@ -125,19 +153,24 @@ function DropdownItem({ item, onMobileClose }: IDropdownItemProps) {
         <div className="border-muted ml-6 space-y-1 border-l-2 pl-3">
           {item.items?.map((child) => {
             const ChildIcon = child.icon
+            const isActiveChild = pathname === child.href
             return (
               <Link
                 key={child.href}
                 to={child.href}
                 onClick={() => onMobileClose?.()}
                 className={cn(
-                  'hover:bg-muted flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200',
-                  pathname === child.href
+                  'flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200',
+                  isActiveChild
                     ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md'
-                    : 'text-muted-fg hover:text-foreground',
+                    : 'text-muted-fg hover:text-primary hover:bg-[#F5F9FC]',
                 )}
               >
-                <SidebarIcon icon={ChildIcon} isActive={pathname === child.href} />
+                <SidebarIcon
+                  icon={ChildIcon}
+                  solidIcon={child.solidIcon}
+                  isActive={isActiveChild}
+                />
                 <span>{child.title}</span>
                 {child.badge && (
                   <span className="bg-primary text-primary-foreground ml-auto rounded-full px-2 py-1 text-xs">
@@ -160,10 +193,10 @@ interface SidebarProps {
 export function Sidebar({ onMobileClose }: SidebarProps) {
   const isGrouped = sidebarData.length > 0 && 'items' in sidebarData[0]
 
-  const alert = useAlert()
+  const { showAlert } = useAlert()
 
   const handleLogoutClick = () => {
-    alert.show({
+    showAlert({
       type: 'confirm',
       title: 'Logout',
       description: 'Are you sure you want to logout?',
@@ -185,7 +218,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   return (
     <div className={cn('flex h-full w-64 flex-col border-r bg-white transition-all duration-300')}>
       <div className="flex h-16 items-center justify-between border-b px-5">
-        <img src={logo} alt="Logo" className="h-[32.939px] w-[89.926px]" />
+        <img src={logo} alt="Logo" className="h-[72.05px] w-[167px]" />
       </div>
       <nav className="flex-1 space-y-6 p-5">
         {isGrouped ? (
@@ -237,7 +270,6 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
             </Button>
           </div>
         </div>
-        {alert.AlertComponent}
         <div className="relative w-full overflow-hidden rounded-lg p-5">
           <button
             onClick={handleLogoutClick}

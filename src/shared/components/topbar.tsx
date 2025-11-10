@@ -1,5 +1,4 @@
-'use client'
-import { Menu } from 'lucide-react'
+import demo_user from '@/assets/images/demo-user.svg'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -8,10 +7,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import SearchBox from './searchbox'
+import { useAuth } from '@/context/auth-context'
+import { useAlert } from '@/hooks/use-alert'
+import { LogoutCircle02Icon, Setup01Icon, UserSharingIcon } from '@hugeicons-pro/core-solid-rounded'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Menu } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useMediaQuery } from '../../hooks/use-media-query'
 import Notification from './notification'
-import demo_user from '@/assets/images/demo-user.svg'
+import SearchBox from './searchbox'
 
 interface TopbarProps {
   sidebarOpen?: boolean
@@ -19,7 +23,36 @@ interface TopbarProps {
 }
 
 export function Topbar({ onSidebarToggle }: TopbarProps) {
+  const { showAlert } = useAlert()
+  const { logout } = useAuth()
+
   const isMobile = useMediaQuery('(max-width: 639px)')
+
+  /**
+   * Shows a confirmation dialog to logout the user.
+   * When the user clicks the 'Logout' button, the logout function is called.
+   * If the user clicks the 'Cancel' button, a message 'Cancelled' is logged to the console.
+   */
+  const handleLogout = () => {
+    showAlert({
+      type: 'confirm',
+      title: 'Logout',
+      description: 'Are you sure you want to logout?',
+      iconAlt: 'Logout confirmation',
+      confirmAction: {
+        label: 'Logout',
+        onClick: async () => {
+          logout()
+        },
+        variant: 'danger',
+      },
+      cancelAction: {
+        label: 'Cancel',
+        onClick: () => console.log('Cancelled'),
+      },
+    })
+  }
+
   return (
     <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-2 md:px-5">
       {/* left section - menu button for mobile/tablet */}
@@ -50,7 +83,7 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
             <div className="flex cursor-pointer items-center gap-2">
               <img
                 src={demo_user}
-                className="ring-muted h-8 w-8 shrink-0 rounded-full ring-2"
+                className="ring-muted h-8 w-8 shrink-0 rounded ring-2"
                 alt="Avatar"
               />
 
@@ -61,18 +94,25 @@ export function Topbar({ onSidebarToggle }: TopbarProps) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-64 p-2" align="end" forceMount>
-            <DropdownMenuItem className="hover:bg-muted cursor-pointer rounded-md p-3 transition-colors">
-              <span className="flex items-center gap-2">👤 Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-muted cursor-pointer rounded-md p-3 transition-colors">
-              <span className="flex items-center gap-2">⚙️ Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-muted cursor-pointer rounded-md p-3 transition-colors">
-              <span className="flex items-center gap-2">💳 Billing</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-2" />
-            <DropdownMenuItem className="cursor-pointer rounded-md p-3 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700">
-              <span className="flex items-center gap-2">🚪 Log out</span>
+            <Link to="/profile">
+              <DropdownMenuItem className="text-muted-fg flex cursor-pointer items-center text-base">
+                <HugeiconsIcon className="size-5 shrink-0" icon={UserSharingIcon} />
+                <p>Profile</p>
+              </DropdownMenuItem>
+            </Link>
+            <Link to="/settings">
+              <DropdownMenuItem className="text-muted-fg flex cursor-pointer items-center text-base">
+                <HugeiconsIcon className="size-5 shrink-0" icon={Setup01Icon} />
+                <p>Settings</p>
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-danger bg-danger/5 hover:text-danger! hover:bg-danger/5! flex cursor-pointer items-center text-base"
+            >
+              <HugeiconsIcon className="size-5 shrink-0" icon={LogoutCircle02Icon} />
+              <p>Logout</p>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
